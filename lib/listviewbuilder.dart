@@ -8,7 +8,7 @@ class ListViewBuilder extends StatefulWidget {
       {super.key,
       required this.todos,
       required this.loadTodo,
-      required this.mybox});
+      required this.mybox,});
 
   @override
   State<ListViewBuilder> createState() => _ListViewBuilderState();

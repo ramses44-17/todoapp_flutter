@@ -11,7 +11,6 @@ class Mainscreen extends StatefulWidget {
 }
 
 class _MainscreenState extends State<Mainscreen> {
-  String filter = 'all';
   var mybox = Hive.box('MyBox');
 
   List todos = [];
@@ -23,16 +22,16 @@ class _MainscreenState extends State<Mainscreen> {
       return;
     }
 
-    if (todos.any((todo) => todo['title'] == todoText.text)) {
+    if (todos.any((todo) => todo['title'] == todoText.text.trim())) {
       showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('the todo already exist'),
+              title: const Text('the todo already exist'),
               content: Text('the todo ${todoText.text} already exist'),
               actions: [
                 InkWell(
-                  child: Text('close'),
+                  child: const Text('close'),
                   onTap: () {
                     Navigator.pop(context);
                   },
@@ -55,6 +54,7 @@ class _MainscreenState extends State<Mainscreen> {
 
         return {'key': key, 'title': todo['title'], 'isDone': todo['isDone']};
       }).toList();
+      filterTodo = todos;
     });
   }
 
@@ -64,6 +64,8 @@ class _MainscreenState extends State<Mainscreen> {
     super.initState();
   }
 
+  List filterTodo = [];
+
   void onAddButtonClick() {
     showModalBottomSheet<void>(
         context: context,
@@ -71,22 +73,27 @@ class _MainscreenState extends State<Mainscreen> {
           return Column(
             children: [
               Padding(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 child: TextField(
+                  onSubmitted: (value) {
+                    addTodos();
+                  },
                   controller: todoText,
                   autofocus: true,
-                  decoration: InputDecoration(hintText: 'write your todo here'),
+                  decoration: const InputDecoration(hintText: 'write your todo here'),
                 ),
               ),
               ElevatedButton(
                   onPressed: () {
                     addTodos();
                   },
-                  child: Text('add'))
+                  child: const Text('add'))
             ],
           );
         });
   }
+
+  String filter = 'all';
 
   @override
   Widget build(BuildContext context) {
@@ -95,55 +102,76 @@ class _MainscreenState extends State<Mainscreen> {
           onPressed: () {
             onAddButtonClick();
           },
-          child: Icon(Icons.add),
           backgroundColor: Colors.indigo,
+          child: const Icon(Icons.add),
         ),
-        drawer: Drawer(),
+        drawer: const Drawer(
+          child: Column(children: [
+            
+          ],),
+        ),
         appBar: AppBar(
-          title: Text('Todo App'),
+          title: const Text('Todo App'),
           centerTitle: true,
           backgroundColor: Colors.grey,
         ),
         body: Column(
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder()),
+                        backgroundColor:
+                            filter == 'all' ? Colors.red[800] : null,
+                        shape: const RoundedRectangleBorder()),
                     onPressed: () {
                       setState(() {
+                        filterTodo = todos;
                         filter = 'all';
                       });
                     },
-                    child: Text('all')),
+                    child: Text(
+                      'all',
+                      style: TextStyle(
+                          color: filter == 'all' ? Colors.white : null),
+                    )),
                 ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder()),
+                        backgroundColor:
+                            filter == 'completed' ? Colors.red[800] : null,
+                        shape: const RoundedRectangleBorder()),
                     onPressed: () {
                       setState(() {
+                        filterTodo =
+                            todos.where((todo) => todo['isDone']).toList();
                         filter = 'completed';
                       });
                     },
-                    child: Text('completed')),
+                    child: const Text('completed')),
                 ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder()),
+                        backgroundColor:
+                            filter == 'uncompleted' ? Colors.red[800] : null,
+                        shape: const RoundedRectangleBorder()),
                     onPressed: () {
                       setState(() {
+                        filterTodo =
+                            todos.where((todo) => !todo['isDone']).toList();
                         filter = 'uncompleted';
                       });
                     },
-                    child: Text('uncompleted'))
+                    child: const Text('uncompleted'))
               ],
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
             ),
             Expanded(
-                child: ListViewBuilder(
-              todos: todos,
-              loadTodo: loadItem,
-              mybox: mybox,
-            )),
+                child: !todos.isEmpty
+                    ? ListViewBuilder(
+                        todos: filterTodo,
+                        loadTodo: loadItem,
+                        mybox: mybox,
+                      )
+                    : const Center(child: Text('you have no todo'))),
           ],
         ));
   }
